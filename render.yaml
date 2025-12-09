@@ -1,0 +1,50 @@
+services:
+  # Spring Boot Web Service
+  - type: web
+    name: demo-board-app
+    env: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: SERVER_PORT
+        value: 8080
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://mysql-db:3306/board_db?allowPublicKeyRetrieval=true&useSSL=false
+      - key: SPRING_DATASOURCE_USERNAME
+        value: root
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: supersecretpassword
+      - key: SPRING_DATA_REDIS_HOST
+        fromService:
+          type: redis
+          name: redis-cache
+          property: host
+      - key: SPRING_DATA_REDIS_PORT
+        fromService:
+          type: redis
+          name: redis-cache
+          property: port
+
+  # Managed Redis Service
+  - type: redis
+    name: redis-cache
+    plan: free # Render offers a free Redis instance
+    ipAllowList: [] # Internal access only
+
+  # MySQL Database (Private Docker Service)
+  # Note: Private Services on Render are a paid feature.
+  - type: pserv
+    name: mysql-db
+    env: docker
+    image: mysql:8.0
+    # Command to ensure authentication compatibility
+    dockerCommand: mysqld --default-authentication-plugin=mysql_native_password
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        value: supersecretpassword
+      - key: MYSQL_DATABASE
+        value: board_db
+    disk:
+      name: mysql-disk
+      mountPath: /var/lib/mysql
+      sizeGB: 10
