@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Spring Boot Application
+  app:
+    build: .
+    container_name: demo-app
+    ports:
+      - "80:8080" # EC2의 80포트(HTTP)를 컨테이너의 8080포트로 연결
+    environment:
+      - SERVER_PORT=8080
+      - DB_HOST=mysql-container
+      - DB_PORT=3306
+      - DB_NAME=board_db
+      - DB_USER=root
+      - DB_PASSWORD=supersecretpassword
+      - SPRING_DATA_REDIS_HOST=redis-container
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      - mysql-container
+      - redis-container
+    networks:
+      - app-network
+    restart: always
+
+  # MySQL Database
+  mysql-container:
+    build:
+      context: .
+      dockerfile: Dockerfile.mysql
+    container_name: mysql-container
+    environment:
+      - MYSQL_ROOT_PASSWORD=supersecretpassword
+      - MYSQL_DATABASE=board_db
+    volumes:
+      - mysql_data:/var/lib/mysql # 데이터 영구 저장
+    networks:
+      - app-network
+    restart: always
+
+  # Redis Cache
+  redis-container:
+    image: redis:alpine
+    container_name: redis-container
+    networks:
+      - app-network
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
