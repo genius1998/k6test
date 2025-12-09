@@ -1,3 +1,9 @@
+databases:
+  - name: board-db
+    plan: free
+    databaseName: board_db
+    user: board_user
+
 services:
   # Spring Boot Web Service
   - type: web
@@ -8,12 +14,30 @@ services:
     envVars:
       - key: SERVER_PORT
         value: 8080
-      - key: SPRING_DATASOURCE_URL
-        value: jdbc:mysql://mysql-db:3306/board_db?allowPublicKeyRetrieval=true&useSSL=false
-      - key: SPRING_DATASOURCE_USERNAME
-        value: root
-      - key: SPRING_DATASOURCE_PASSWORD
-        value: supersecretpassword
+      
+      # Database Connection (Linking to the Free Postgres DB above)
+      - key: DB_HOST
+        fromDatabase:
+          name: board-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: board-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: board-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: board-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: board-db
+          property: password
+          
+      # Redis Connection
       - key: SPRING_DATA_REDIS_HOST
         fromService:
           type: redis
@@ -28,21 +52,5 @@ services:
   # Managed Redis Service
   - type: redis
     name: redis-cache
-    plan: free # Render offers a free Redis instance
-    ipAllowList: [] # Internal access only
-
-  # MySQL Database (Private Docker Service)
-  # Note: Private Services on Render are a paid feature.
-  - type: pserv
-    name: mysql-db
-    env: docker
-    dockerfilePath: Dockerfile.mysql
-    envVars:
-      - key: MYSQL_ROOT_PASSWORD
-        value: supersecretpassword
-      - key: MYSQL_DATABASE
-        value: board_db
-    disk:
-      name: mysql-disk
-      mountPath: /var/lib/mysql
-      sizeGB: 10
+    plan: free
+    ipAllowList: []
