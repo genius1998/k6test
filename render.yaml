@@ -35,7 +35,7 @@ services:
   # Note: Private Services on Render are a paid feature.
   - type: pserv
     name: mysql-db
-    env: docker
+    env: image
     image: mysql:8.0
     # Command to ensure authentication compatibility
     dockerCommand: mysqld --default-authentication-plugin=mysql_native_password
