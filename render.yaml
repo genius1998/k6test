@@ -8,7 +8,12 @@ services:
     envVars:
       - key: SERVER_PORT
         value: 8080
-      # Using H2 Database (configured in application.properties), so DB env vars are removed.
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://mysql-db:3306/board_db?allowPublicKeyRetrieval=true&useSSL=false
+      - key: SPRING_DATASOURCE_USERNAME
+        value: root
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: supersecretpassword
       - key: SPRING_DATA_REDIS_HOST
         fromService:
           type: redis
@@ -25,3 +30,19 @@ services:
     name: redis-cache
     plan: free # Render offers a free Redis instance
     ipAllowList: [] # Internal access only
+
+  # MySQL Database (Private Docker Service)
+  # Note: Private Services on Render are a paid feature.
+  - type: pserv
+    name: mysql-db
+    env: docker
+    dockerfilePath: Dockerfile.mysql
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        value: supersecretpassword
+      - key: MYSQL_DATABASE
+        value: board_db
+    disk:
+      name: mysql-disk
+      mountPath: /var/lib/mysql
+      sizeGB: 10
